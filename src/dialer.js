@@ -7,7 +7,7 @@
 
 const multiaddr = require('multiaddr')
 const PeerId = require('peer-id')
-const Node = require('./libp2p-bundle')
+const Node = require('./libp2p/libp2p-bundle')
 const pipe = require('it-pipe')
 
 async function run() {
