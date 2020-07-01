@@ -9,6 +9,7 @@ const multiaddr = require('multiaddr')
 const PeerId = require('peer-id')
 const Node = require('./libp2p/libp2p-bundle')
 const pipe = require('it-pipe')
+const protobuf = require("protobufjs");
 
 async function run() {
   const [dialerId, listenerId] = await Promise.all([
@@ -41,10 +42,13 @@ async function run() {
   const { stream } = await dialerNode.dialProtocol(listenerMultiaddr, proto)
 
   console.log('nodeA dialed to nodeB on protocol: ',proto)
+//var messages = require('./build/syn');
 
-  goog.require('proto.handshake.Syn')
+//var message = new messages.Syn();
 
-var message = proto.handshake.Syn()
+  //goog.require('proto.handshake.Syn')
+
+//var message = proto.handshake.Syn()
 
   pipe(
     // Source data
