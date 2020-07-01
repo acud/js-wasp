@@ -50,6 +50,9 @@ async function run() {
     // Obtain a message type
     var Syn = root.lookupType("handshake.Syn");
     var Ack = root.lookupType("handshake.Ack");
+    var SynAck = root.lookupType("handshake.SynAck");
+   
+   
     // Exemplary payload
     var payload = { ObservedUnderlay: Buffer.from("/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAm8Wg94rkGaq3JLH6UUVgvUAW5DRficCcaqH7rAReB2h6w", 'utf-8') };
 
@@ -98,10 +101,11 @@ async function run() {
           //b.write(data)
           console.log("1,")
 
-        var message = Ack.decode(data.slice());
+        var message = SynAck.decode(data.slice());
 
         console.log(message)    
-        }        
+        } 
+
       }
     )
   });
