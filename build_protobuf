@@ -1,0 +1,1 @@
+protoc -I ./src/pb --js_out=library=protocols/handshake,binary:src/build src/pb/handshake.proto

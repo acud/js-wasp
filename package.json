@@ -1,0 +1,16 @@
+{
+  "name": "js-swarm",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "libp2p": "^0.28.3",
+    "libp2p-mplex": "^0.9.5",
+    "libp2p-secio": "^0.12.5"
+  }
+}
