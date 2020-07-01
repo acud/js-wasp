@@ -1,1 +1,2 @@
-protoc -I ./src/pb --js_out=library=protocols/handshake,binary:src/build src/pb/handshake.proto
+#!/bin/bash
+protoc -I ./src/pb --js_out=import_style=protocols/handshake,binary:src/build src/pb/handshake.proto

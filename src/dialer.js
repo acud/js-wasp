@@ -25,7 +25,8 @@ async function run() {
   })
 
   // Add peer to Dial (the listener) into the PeerStore
-  const listenerMultiaddr = '/ip4/127.0.0.1/tcp/10333/p2p/' + listenerId.toB58String()
+  //const listenerMultiaddr = '/ip4/127.0.0.1/tcp/10333/p2p/' + listenerId.toB58String()
+  const listenerMultiaddr = '/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAm8Wg94rkGaq3JLH6UUVgvUAW5DRficCcaqH7rAReB2h6w' //'/ip4/127.0.0.1/tcp/10333/p2p/' + listenerId.toB58String()
 
   // Start the dialer libp2p node
   await dialerNode.start()
@@ -36,13 +37,19 @@ async function run() {
 
   // Dial the listener node
   console.log('Dialing to peer:', listenerMultiaddr)
-  const { stream } = await dialerNode.dialProtocol(listenerMultiaddr, '/echo/1.0.0')
+  const proto = '/swarm/handshake/1.0.0/handshake'
+  const { stream } = await dialerNode.dialProtocol(listenerMultiaddr, proto)
 
-  console.log('nodeA dialed to nodeB on protocol: /echo/1.0.0')
+  console.log('nodeA dialed to nodeB on protocol: ',proto)
+
+  goog.require('proto.handshake.Syn')
+
+var message = proto.handshake.Syn()
 
   pipe(
     // Source data
-    ['hey'],
+    message,
+    //['hey'],
     // Write to the stream, and pass its output to the next function
     stream,
     // Sink function

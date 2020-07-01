@@ -18,6 +18,7 @@
     "libp2p-secio": "^0.12.5",
     "libp2p-tcp": "^0.14.5",
     "multiaddr": "^7.5.0",
-    "peer-id": "^0.13.13"
+    "peer-id": "^0.13.13",
+    "protoc": "^1.0.4"
   }
 }
