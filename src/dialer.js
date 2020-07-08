@@ -5,6 +5,27 @@
  * Dialer Node
  */
 
+ /*
+requires this change in bee for the time being:
+growlie@growlie-strikes-back ~/go/src/github.com/ethersphere/bee ±master⚡ » gd                                                                                                                   [1/07/20|12:44PM]
+diff --git a/pkg/p2p/libp2p/internal/handshake/handshake.go b/pkg/p2p/libp2p/internal/handshake/handshake.go
+index 91fe221..f718e00 100644
+--- a/pkg/p2p/libp2p/internal/handshake/handshake.go
++++ b/pkg/p2p/libp2p/internal/handshake/handshake.go
+@@ -195,8 +195,8 @@ func (s *Service) Handle(stream p2p.Stream, remoteMultiaddr ma.Multiaddr, remote
+        if err := r.ReadMsgWithTimeout(messageTimeout, &syn); err != nil {
+                return nil, fmt.Errorf("read syn message: %w", err)
+        }
+-
+-       observedUnderlay, err := ma.NewMultiaddrBytes(syn.ObservedUnderlay)
++       fmt.Println(string(syn.ObservedUnderlay))
++       observedUnderlay, err := ma.NewMultiaddr(string(syn.ObservedUnderlay))
+        if err != nil {
+                return nil, ErrInvalidSyn
+        }
+growlie@growlie-strikes-back ~/go/src/github.com/et
+ */
+
 const multiaddr = require('multiaddr')
 const PeerId = require('peer-id')
 const Node = require('./libp2p/libp2p-bundle')
