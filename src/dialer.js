@@ -115,8 +115,6 @@ async function run() {
       async function (source) {
         // For each chunk of data
         let b = Buffer.alloc(10000)
-        let aaa = Ack.create();
-        //return "string";
         for await (const data of source) {
           var message = SynAck.decode(data.slice());
           console.log("************SYNCACK*********")
@@ -137,7 +135,7 @@ async function run() {
           console.log("************ACK*********")
           console.log(a);
           console.log("************ACK*********")
-          aaa = Ack.encode(a).finish()
+          let aaa = Ack.encode(a).finish()
           console.log("sending ack")
           return aaa
         }
