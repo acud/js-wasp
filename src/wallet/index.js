@@ -1,6 +1,4 @@
-let unsafewallet = require('./unsafewallet');
+let unsafewallet = require('./wallet');
 
-module.exports = {
-	Wallet: unsafewallet.Wallet,
-};
+module.exports = unsafewallet.Wallet;
 
