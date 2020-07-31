@@ -18,7 +18,6 @@ index 91fe221..f718e00 100644
        }
 -
 -       observedUnderlay, err := ma.NewMultiaddrBytes(syn.ObservedUnderlay)
-+       fmt.Println(string(syn.ObservedUnderlay))
 +       observedUnderlay, err := ma.NewMultiaddr(string(syn.ObservedUnderlay))
        if err != nil {
                return nil, ErrInvalidSyn
@@ -33,6 +32,7 @@ const pipe = require('it-pipe')
 const protobuf = require("protobufjs")
 const lp = require('it-length-prefixed')
 const wallet = require('./wallet')
+const PassThrough = require('stream').PassThrough;
 
 let genSignData = function (under, over) {
   //func generateSignData(underlay, overlay []byte, networkID uint64) []byte {
@@ -46,10 +46,6 @@ let genSignData = function (under, over) {
   let o1 = Uint8Array.from(over)
   let data = Buffer.concat([u1, o1, networkId])// [].push(...u1) //[].concat(u1,o1,networkId)
   console.log(data)
-  //l
-  //u1.push(...o1)
-  //u1.push(...networkId)
-  //console.log(u1)
   return data
 }
 
@@ -68,7 +64,6 @@ async function run() {
   })
 
   // Add peer to Dial (the listener) into the PeerStore
-  //const listenerMultiaddr = '/ip4/127.0.0.1/tcp/10333/p2p/' + listenerId.toB58String()
   const listenerMultiaddr = '/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAmTjKQVuuZRtrAKWnMf2p1FYAUqmfHh9DdFicyCvZCRffN'
 
   // Start the dialer libp2p node
@@ -84,83 +79,53 @@ async function run() {
   const { stream } = await dialerNode.dialProtocol(listenerMultiaddr, proto)
 
   console.log('nodeA dialed to nodeB on protocol: ', proto)
-  protobuf.load("pb/handshake.proto", function (err, root) {
-    if (err)
-      throw err;
 
-    // Obtain a message type
-    var Syn = root.lookupType("handshake.Syn");
-    var Ack = root.lookupType("handshake.Ack");
-    var SynAck = root.lookupType("handshake.SynAck");
-    var Addr = root.lookupType("handshake.BzzAddress");
+  let root = await protobuf.load("pb/handshake.proto")
 
-
-    // Exemplary payload
-    var payload = { ObservedUnderlay: Buffer.from("/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAm8Wg94rkGaq3JLH6UUVgvUAW5DRficCcaqH7rAReB2h6w", 'utf-8') };
-
-    // Verify the payload if necessary (i.e. when possibly incomplete or invalid)
-    var errMsg = Syn.verify(payload);
-    if (errMsg)
-      throw Error(errMsg);
-    // Create a new message
-    var message = Syn.create(payload); // or use .fromObject if conversion is necessary
+  // Obtain a message type
+  var Syn = root.lookupType("handshake.Syn");
+  var Ack = root.lookupType("handshake.Ack");
+  var SynAck = root.lookupType("handshake.SynAck");
+  var Addr = root.lookupType("handshake.BzzAddress");
 
 
+  // Exemplary payload
+  var payload = { ObservedUnderlay: Buffer.from("/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAm8Wg94rkGaq3JLH6UUVgvUAW5DRficCcaqH7rAReB2h6w", 'utf-8') };
 
-    // Encode a message to an Uint8Array (browser) or Buffer (node)
-    var buffer = Syn.encode(message).finish();
+  // Verify the payload if necessary (i.e. when possibly incomplete or invalid)
+  var errMsg = Syn.verify(payload);
+  if (errMsg)
+    throw Error(errMsg);
+  // Create a new message
+  var message = Syn.create(payload); // or use .fromObject if conversion is necessary
 
-    var ww = wallet();
-    console.log(ww)
-    console.log(ww.getAddress())
-    console.log(ww.prototype)
-    //console.log("wallet addr",ww)
+  // Encode a message to an Uint8Array (browser) or Buffer (node)
+  var buffer = Syn.encode(message).finish();
 
-    // ... do something with buffer
+  var ww = wallet();
+  console.log(ww.getAddress())
 
-    // Decode an Uint8Array (browser) or Buffer (node) to a message
-    //var message = AwesomeMessage.decode(buffer);
-    // ... do something with message
-
-    // If the application uses length-delimited buffers, there is also encodeDelimited and decodeDelimited.
-
-    // Maybe convert the message back to a plain object
-    //var object = AwesomeMessage.toObject(message, {
-    //longs: String,
-    //enums: String,
-    //bytes: String,
-    //// see ConversionOptions
-    //});
-    console.log(buffer)
-    let ackM = Ack.create();
-
-    pipe(
-      // Source data
+  let st = new PassThrough();
+  try {
+    let val = await pipe(
       [buffer],
       lp.encode(),
-      // Write to the stream, and pass its output to the next function
       stream,
       lp.decode(),
-      // Sink function
       async function (source) {
-        //  await sleep(1000)
         // For each chunk of data
         let b = Buffer.alloc(10000)
+        let aaa = Ack.create();
+        //return "string";
         for await (const data of source) {
-          // Output the data
-          //b.write(data)
-          console.log("1,")
-
           var message = SynAck.decode(data.slice());
           console.log("************SYNCACK*********")
           console.log(message)
           console.log("************SYNCACK*********")
 
-
           let u1 = message.Syn.ObservedUnderlay
-          let o1 = ww.getAddress()
+          let o1 = ww.getAddress('ha')
           let signature = ww.signDigest32(genSignData(u1, o1))
-          console.log(signature)
           let aa = Addr.create(
             {
               Underlay: u1,
@@ -172,43 +137,26 @@ async function run() {
           console.log("************ACK*********")
           console.log(a);
           console.log("************ACK*********")
-          //a.Address.Overlay = 1;
-          ackM = a
-          //return a
-          return []
+          aaa = Ack.encode(a).finish()
+          console.log("sending ack")
+          return aaa
         }
       },
-
-      [ackM],
-      lp.encode(),
-      stream,
-
     )
-  });
+    console.log("got", val)
 
-  //var message = new messages.Syn();
+    await pipe(
+      [val],
+      lp.encode(),
+      stream.sink,
+    )
+  }
+  catch (e) {
+    console.log(e)
+  }
 
-  //goog.require('proto.handshake.Syn')
-
-  //var message = proto.handshake.Syn()
-
-  //pipe(
-  //// Source data
-  //message,
-  ////['hey'],
-  //// Write to the stream, and pass its output to the next function
-  //stream,
-  //// Sink function
-  //async function (source) {
-  //// For each chunk of data
-  //for await (const data of source) {
-  //// Output the data
-  //console.log('received echo:', data.toString())
-  //}
-  //}
-  //)
+  await sleep(1000)
 }
-
 run()
 
 
