@@ -33,6 +33,15 @@ const protobuf = require("protobufjs")
 const lp = require('it-length-prefixed')
 const wallet = require('./wallet')
 const PassThrough = require('stream').PassThrough;
+var ww = wallet();
+
+console.log("overlay:")
+console.log(ww.getOverlay())
+console.log("private key:")
+///ip4/127.0.0.1/tcp/44001/p2p/Qma3GsJmB47xYuyahPZPSadh1avvxfyYQwk8R3UnFrQ6aP
+console.log(ww.getPrivateKey())
+
+
 
 let genSignData = function (under, over) {
   //func generateSignData(underlay, overlay []byte, networkID uint64) []byte {
@@ -52,7 +61,6 @@ let genSignData = function (under, over) {
 
 
 function passthroughToStream(ps, stream) {
-
   const myAsyncIterable = {
     async*[Symbol.asyncIterator]() {
       for await (const chunk of ps) {
@@ -84,7 +92,6 @@ function streamToPs(stream, ps) {
       // For each chunk of data
       for await (const msg of source) {
         // Output the data as a utf8 string
-        console.log("wtfffff")
         let vvv = new Uint8Array(msg.slice());
         ps.write(vvv)
         //console.log('> wtffff ' + msg.toString('utf8').replace('\n', ''))
@@ -147,8 +154,6 @@ async function run() {
   // Encode a message to an Uint8Array (browser) or Buffer (node)
   var buffer = Syn.encode(message).finish();
 
-  var ww = wallet();
-  console.log(ww.getAddress())
 
   let protoWriter = new PassThrough();
   let protoReader = new PassThrough();
@@ -174,13 +179,13 @@ async function run() {
   console.log("************SYNCACK*********")
 
   let u1 = message.Syn.ObservedUnderlay
-  let o1 = ww.getAddress('ha')
+  let o1 = ww.getOverlay()
   let signature = ww.signDigest32(genSignData(u1, o1))
   let aa = Addr.create(
     {
       Underlay: u1,
       Overlay: o1,
-      Signature: signature.signature,
+      Signature: signature,
     }
   );
   var a = Ack.create({
