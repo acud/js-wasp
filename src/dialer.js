@@ -49,6 +49,51 @@ let genSignData = function (under, over) {
   return data
 }
 
+
+
+function passthroughToStream(ps, stream) {
+
+  const myAsyncIterable = {
+    async*[Symbol.asyncIterator]() {
+      for await (const chunk of ps) {
+        //console.log(chunk)
+        yield chunk;
+      }
+    }
+  };
+
+  pipe(
+    // Read from passthrough stream (the source)
+    myAsyncIterable,
+
+    // Encode with length prefix (so receiving side knows how much data is coming)
+    lp.encode(),
+    // Write to the stream (the sink)
+    stream.sink
+  )
+}
+
+function streamToPs(stream, ps) {
+  pipe(
+    // Read from the stream (the source)
+    stream.source,
+    // Decode length-prefixed data
+    lp.decode(),
+    // Sink function
+    async function (source) {
+      // For each chunk of data
+      for await (const msg of source) {
+        // Output the data as a utf8 string
+        console.log("wtfffff")
+        let vvv = new Uint8Array(msg.slice());
+        ps.write(vvv)
+        //console.log('> wtffff ' + msg.toString('utf8').replace('\n', ''))
+      }
+    }
+
+  )
+}
+
 async function run() {
   const [dialerId, listenerId] = await Promise.all([
     PeerId.createFromJSON(require('./id-d')),
@@ -105,7 +150,52 @@ async function run() {
   var ww = wallet();
   console.log(ww.getAddress())
 
-  let st = new PassThrough();
+  let protoWriter = new PassThrough();
+  let protoReader = new PassThrough();
+
+  passthroughToStream(protoWriter, stream);
+  streamToPs(stream, protoReader);
+  //console.log(Object.getOw cnPropertyNames(stream.sink.prototype))
+
+  protoWriter.write(buffer)
+  let r;
+  let i = 0;
+  while (i < 10) {
+    r = protoReader.read();
+    if (r != null) {
+      break;
+    }
+    i++;
+    await sleep(100)
+  }
+  var message = SynAck.decode(r);
+  console.log("************SYNCACK*********")
+  console.log(message)
+  console.log("************SYNCACK*********")
+
+  let u1 = message.Syn.ObservedUnderlay
+  let o1 = ww.getAddress('ha')
+  let signature = ww.signDigest32(genSignData(u1, o1))
+  let aa = Addr.create(
+    {
+      Underlay: u1,
+      Overlay: o1,
+      Signature: signature.signature,
+    }
+  );
+  var a = Ack.create({
+    Address: aa,
+    NetworkID: 1,
+    Light: false,
+    WelcomeMessage: "welcome earthling",
+  });
+  console.log("************ACK*********")
+  console.log(a);
+  console.log("************ACK*********")
+  let aaa = Ack.encode(a).finish()
+  console.log("sending ack")
+  protoWriter.write(aaa);
+  /*
   try {
     let val = await pipe(
       [buffer],
@@ -120,7 +210,7 @@ async function run() {
           console.log("************SYNCACK*********")
           console.log(message)
           console.log("************SYNCACK*********")
-
+          console.log(stream)
           let u1 = message.Syn.ObservedUnderlay
           let o1 = ww.getAddress('ha')
           let signature = ww.signDigest32(genSignData(u1, o1))
@@ -137,26 +227,34 @@ async function run() {
           console.log("************ACK*********")
           let aaa = Ack.encode(a).finish()
           console.log("sending ack")
+          stream.sink(aaa)
           return aaa
         }
       },
+ 
     )
     console.log("got", val)
-
     await pipe(
       [val],
       lp.encode(),
-      stream.sink,
+      stream,
     )
+    console.log('wwwww')
   }
   catch (e) {
     console.log(e)
   }
-
+  */
+  console.log("sleeping")
   await sleep(1000)
+  console.log("done sleeping")
+  return
 }
-run()
 
+let t = run()
+t.then()
+
+console.log("returning")
 
 
 function sleep(ms) {
