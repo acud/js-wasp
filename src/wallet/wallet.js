@@ -48,6 +48,3 @@ function Wallet() {
 	}
 	return this
 }
-uint8ToHex = function (val) {
-	return Buffer.from(val).toString('hex');
-}
