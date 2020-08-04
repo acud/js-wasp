@@ -1,4 +1,4 @@
-let unsafewallet = require('./wallet');
+let wallet = require('./wallet');
 
-module.exports = unsafewallet.Wallet;
+module.exports = wallet.Wallet;
 
