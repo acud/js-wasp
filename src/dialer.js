@@ -15,6 +15,7 @@ const lp = require('it-length-prefixed')
 const wallet = require('./wallet')
 const PassThrough = require('stream').PassThrough;
 var ww = wallet();
+const multiaddr = require('multiaddr')
 
 console.log("overlay:")
 console.log(ww.getOverlay())
@@ -79,7 +80,48 @@ function streamToPs(stream, ps) {
   )
 }
 
+
+
+function passthroughToStream(ps, stream) {
+  const asyncIterable = {
+    async*[Symbol.asyncIterator]() {
+      for await (const chunk of ps) {
+        yield chunk;
+      }
+    }
+  };
+
+  pipe(
+    // Read from passthrough stream (the source)
+    asyncIterable,
+    // Encode with length prefix (so receiving side knows how much data is coming)
+    lp.encode(),
+    // Write to the stream (the sink)
+    stream.sink
+  )
+}
+
+function streamToPs(stream, ps) {
+  pipe(
+    // Read from the stream (the source)
+    stream.source,
+    // Decode length-prefixed data
+    lp.decode(),
+    // Sink function
+    async function (source) {
+      // For each chunk of data
+      for await (const msg of source) {
+        // Output the data as a utf8 string
+        let v = new Uint8Array(msg.slice());
+        ps.write(v)
+      }
+    }
+
+  )
+}
+
 async function run() {
+
   let root = await protobuf.load("pb/handshake.proto")
 
   // Obtain a message types
@@ -125,7 +167,6 @@ async function run() {
   console.log('nodeA dialed to nodeB on protocol: ', proto)
 
   const addr = multiaddr("/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAm8Wg94rkGaq3JLH6UUVgvUAW5DRficCcaqH7rAReB2h6w")
-  //const addr = multiaddr("/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAmGZYxnQG2Mhibjxyjfn3TuYE7PeFFxuAoAac9fZoy8viA")
   var message = Syn.create({ ObservedUnderlay: addr.buffer }); // or use .fromObject if conversion is necessary
   var buffer = Syn.encode(message).finish();
 
