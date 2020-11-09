@@ -42,9 +42,16 @@ function Wallet() {
 	this.signDigest32 = function (buffer) {
 		let b = crypto.createHash('sha256').update(buffer,'utf-8').digest()
 		let signCtx = secp256k1.secp256k1_context_create(secp256k1.secp256k1_context_SIGN)
-		const output = Buffer.alloc(secp256k1.secp256k1_ecdsa_recoverable_SIGBYTES)
+		let output = Buffer.alloc(secp256k1.secp256k1_ecdsa_recoverable_SIGBYTES)
 		secp256k1.secp256k1_ecdsa_sign_recoverable(signCtx, output, b, this.privateKey)
-		return output
+    console.log(output)
+    let v1 = output[output.length]
+    let v2 = output[0]
+    output[0]=v1
+    output[output.length]=v2
+    console.log(output)
+
+    return output
 	}
 	return this
 }

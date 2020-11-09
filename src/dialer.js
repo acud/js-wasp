@@ -15,7 +15,6 @@ const lp = require('it-length-prefixed')
 const wallet = require('./wallet')
 const PassThrough = require('stream').PassThrough;
 var ww = wallet();
-const multiaddr = require('multiaddr')
 
 console.log("overlay:")
 console.log(ww.getOverlay())
@@ -34,12 +33,13 @@ let genSignData = function (under, over) {
   let networkId = Uint8Array.from([0, 0, 0, 0, 0, 0, 0, 1])
   let u1 = Uint8Array.from(under)
   let o1 = Uint8Array.from(over)
-  let data = Buffer.concat([u1, o1, networkId])// [].push(...u1) //[].concat(u1,o1,networkId)
-  console.log(data)
-  return data
+ 
+  let data = Buffer.concat([u1, o1, networkId])
+  let eth =Uint8Array.from(Array.from("\x19Ethereum Signed Message:\n" + data.length))
+  let data1 = Buffer.concat([eth,data])
+  console.log(data1)
+  return data1
 }
-
-
 
 function passthroughToStream(ps, stream) {
   const asyncIterable = {
@@ -80,7 +80,6 @@ function streamToPs(stream, ps) {
 }
 
 async function run() {
-
   let root = await protobuf.load("pb/handshake.proto")
 
   // Obtain a message types
@@ -104,7 +103,7 @@ async function run() {
   })
 
   // Add peer to Dial (the listener) into the PeerStore
-  const listenerMultiaddr = '/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAmTjKQVuuZRtrAKWnMf2p1FYAUqmfHh9DdFicyCvZCRffN'
+  const listenerMultiaddr = "/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAmGZYxnQG2Mhibjxyjfn3TuYE7PeFFxuAoAac9fZoy8viA"//'/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAmTjKQVuuZRtrAKWnMf2p1FYAUqmfHh9DdFicyCvZCRffN'
 
   // Start the dialer libp2p node
   await dialerNode.start()
@@ -126,6 +125,7 @@ async function run() {
   console.log('nodeA dialed to nodeB on protocol: ', proto)
 
   const addr = multiaddr("/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAm8Wg94rkGaq3JLH6UUVgvUAW5DRficCcaqH7rAReB2h6w")
+  //const addr = multiaddr("/ip4/127.0.0.1/tcp/7070/p2p/16Uiu2HAmGZYxnQG2Mhibjxyjfn3TuYE7PeFFxuAoAac9fZoy8viA")
   var message = Syn.create({ ObservedUnderlay: addr.buffer }); // or use .fromObject if conversion is necessary
   var buffer = Syn.encode(message).finish();
 
