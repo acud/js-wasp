@@ -23,7 +23,7 @@
     "libp2p-tcp": "0.14.5",
     "multiaddr": "^7.5.0",
     "peer-id": "0.13.13",
-    "protobufjs": "6.9.0",
+    "protobufjs": "6.11.3",
     "protoc": "1.0.4",
     "secp256k1": "^4.0.1",
     "secp256k1-native": "^1.1.1"
